@@ -33,6 +33,8 @@ class NominShorter(MarketPlayer):
         self.fiat = init_value * Dec(2)
 
     def step(self) -> None:
+        super().step()
+
         # get rid of havvens, as that isn't the point of this player
         if self.available_havvens:
             self.sell_havvens_for_nomins(self.available_havvens)

@@ -106,6 +106,8 @@ class MarketMaker(MarketPlayer):
             self.fiat = init_value*Dec(6)
 
     def step(self) -> None:
+        super().step()
+
         # don't do anything until only holding the correct two currencies
         if self.trade_market == self.havven_nomin_market:
             if self.available_fiat > 0:

@@ -47,6 +47,7 @@ class Arbitrageur(MarketPlayer):
         favourable such cycle if the profit available around that
         cycle is better than the profit threshold (including fees).
         """
+        super().step()
 
         self.havven_fiat_bid_qty = self.havven_fiat_market.highest_bid_quantity()
         self.havven_nomin_bid_qty = self.havven_nomin_market.highest_bid_quantity()

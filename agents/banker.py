@@ -28,6 +28,8 @@ class Banker(MarketPlayer):
         self.model.endow_havvens(self, endowment)
 
     def step(self) -> None:
+        super().step()
+        
         if self.nomin_havven_order is not None:
             if self.model.manager.time >= self.nomin_havven_order[0] + self.trade_duration:
                 self.nomin_havven_order[1].cancel()

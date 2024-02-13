@@ -6,6 +6,8 @@ from mesa import Agent
 
 from core import orderbook as ob
 from managers import HavvenManager as hm
+from core import stats as st
+
 
 Portfolio = namedtuple(
     "Portfolio", ["fiat", "escrowed_havvens", "havvens", "nomins", "issued_nomins"])
@@ -474,4 +476,44 @@ class MarketPlayer(Agent):
         self.trades.append(record)
 
     def step(self) -> None:
-        pass
+        # pass
+        """
+        The agent's behavior at each step of the simulation, including burning excess nomins.
+        """
+        # Calculate how many nomins to burn this step
+        nomins_to_burn = self.calculate_burn_rate()
+        print("in step function of makrketplayer : nomins to burn" , nomins_to_burn)
+
+        # Burn the calculated amount of nomins
+        if nomins_to_burn > Dec('0'):
+            self.burn_nomins(nomins_to_burn)
+    
+    def calculate_burn_rate(self) -> Dec:
+        """
+        Calculate the burn rate based on the excess supply of nomins in the market.
+        The excess supply could be determined by the difference between the current supply and a target supply.
+        This is a simplified example for demonstration purposes.
+        """
+        # Define target supply for nomins (could be set based on market conditions or predefined)
+        target_supply = Dec('10')  # Placeholder value
+
+         # Get the current supply from the stats module function
+        current_supply = Dec(st.nomin_supply(self.model))
+
+        # If current supply is zero, we cannot perform division, so set burn rate to zero
+        if current_supply == Dec('0'):
+            return Dec('0')
+
+        # Calculate excess supply
+        excess_supply = max(current_supply - target_supply, Dec('0'))
+
+        # Define a burn percentage, which could be a system parameter
+        burn_percentage = Dec('0.01')  # 1% burn rate
+
+        # Calculate the burn amount based on the burn rate and the agent's proportion of the excess supply
+        agent_excess_nomins = max(self.nomins - self.issued_nomins, Dec('0'))
+        # print("agent_excess_nomins" , agent_excess_nomins)
+        agent_burn_amount = burn_percentage * (agent_excess_nomins / current_supply) * excess_supply
+        # print("agent_burn_amount " , agent_burn_amount)
+
+        return agent_burn_amount

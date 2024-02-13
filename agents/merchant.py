@@ -57,6 +57,8 @@ class Merchant(MarketPlayer):
         self.fiat = init_value
 
     def step(self) -> None:
+        super().step()
+
         self.last_restock += 1
         if self.last_restock > self.restock_tick_rate:
             self.last_restock = 0

@@ -36,6 +36,7 @@ class CentralBank(MarketPlayer):
         """The bank will try to correct the price if it strays out of this range."""
 
     def step(self) -> None:
+        super().step()
 
         self.cancel_orders()
 
