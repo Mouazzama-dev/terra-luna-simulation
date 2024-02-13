@@ -20,35 +20,34 @@ class WealthModule(BarGraphModule):
         self.sent_data = False
 
     def render(self, model: HavvenModel) -> Tuple[List[str], List[str], List[float]]:
-        data_collector: "DataCollector" = getattr(
-            model, self.data_collector_name
-        )
+            
+            data_collector: "DataCollector" = getattr(model, self.data_collector_name)
 
-        if len(data_collector.agent_vars["Agents"]) <= 1:
-            self.sent_data = False
+            # Get the agent data as a DataFrame
+            agent_data = data_collector.get_agent_vars_dataframe()
 
-        if not self.sent_data:
-            # short list for names of types, list of actor names, and lists for the wealth breakdowns
-            vals: Tuple[List[str], List[str], List[float]] = (["Wealth in fiat"], ["darkgreen"], [1], [], [])
-            static_val_len = 4
-        else:
-            vals = ([],)
-            static_val_len = 0
+            if len(agent_data) <= 1:
+                self.sent_data = False
 
-        try:
-            agents = sorted(
-                data_collector.agent_vars["Agents"][-1],
-                key=lambda x: x[0]
-            )  # [:-1]
-            for item in agents:
-                if not self.sent_data:
-                    vals[3].append(item[1].name)
-                vals[0 + static_val_len].append(float(item[1].wealth()))
-            self.sent_data = True
-        except Exception:
-            vals = []
+            if not self.sent_data:
+                # short list for names of types, list of actor names, and lists for the wealth breakdowns
+                vals: Tuple[List[str], List[str], List[float]] = (["Wealth in fiat"], ["darkgreen"], [1], [], [])
+                static_val_len = 4
+            else:
+                vals = ([],)
+                static_val_len = 0
 
-        return vals
+            try:
+                agents = sorted(agent_data.iloc[-1].items(),key=lambda x: x[0])
+                for item in agents:
+                    if not self.sent_data:
+                        vals[3].append(item[1].name)
+                    vals[0 + static_val_len].append(float(item[1].wealth()))
+                self.sent_data = True
+            except Exception:
+                vals = []
+
+            return vals
 
 
 PortfolioTuple = Tuple[List[str], List[str], List[int],
@@ -70,13 +69,15 @@ class PortfolioModule(BarGraphModule):
 
         # ensure the data for agent names/colours only appears in the first tick
         self.sent_data = False
-
+        
     def render(self, model: HavvenModel) -> PortfolioTuple:
-        data_collector: "DataCollector" = getattr(
-            model, self.data_collector_name
-        )
 
-        if len(data_collector.agent_vars["Agents"]) <= 1:
+        data_collector: "DataCollector" = getattr(model, self.data_collector_name)
+    
+        # Get the agent data as a DataFrame
+        agent_data = data_collector.get_agent_vars_dataframe()
+
+        if len(agent_data) <= 1:
             self.sent_data = False
 
         # vals are [datasets],[colours],[bar #],[playername],[dataset 1],...[dataset n]
@@ -90,10 +91,23 @@ class PortfolioModule(BarGraphModule):
             static_val_len = 0
 
         try:
-            agents = sorted(
-                data_collector.agent_vars["Agents"][-1],
-                key=lambda x: x[0]
-            )  # [:-1]
+            agents = sorted(agent_data.iloc[-1].items(),key=lambda x: x[0])
+            for item in agents:
+                if not self.sent_data:
+                    vals[3].append(item[1].name)
+                breakdown = item[1].portfolio(self.fiat_values)
+                for i in range(len(breakdown)):
+                    # assume that issued nomins are last
+                    if i+1 == len(breakdown):
+                        vals[i + static_val_len].append(-float(breakdown[i]))
+                    else:
+                        vals[i + static_val_len].append(float(breakdown[i]))
+                    # print("interim values: ", vals)
+            self.sent_data = True
+            return vals
+        except KeyError as e:
+            # Handle exceptions if necessary
+            pass
 
             for item in agents:
                 if not self.sent_data:
@@ -108,7 +122,6 @@ class PortfolioModule(BarGraphModule):
             self.sent_data = True
         except Exception:
             vals = []
-
         return vals
 
 
@@ -124,11 +137,12 @@ class CurrentOrderModule(BarGraphModule):
         self.sent_data = False
 
     def render(self, model: HavvenModel) -> OrderbookValueTuple:
-        data_collector: "DataCollector" = getattr(
-            model, self.data_collector_name
-        )
+        data_collector: "DataCollector" = getattr(model, self.data_collector_name)
+    
+        # Get the agent data as a DataFrame
+        agent_data = data_collector.get_agent_vars_dataframe()
 
-        if len(data_collector.agent_vars["Agents"]) <= 1:
+        if len(agent_data) <= 1:
             self.sent_data = False
 
         # vals are [datasets],[colours],[bar #],[playername],[dataset 1],...[dataset n]
@@ -144,11 +158,7 @@ class CurrentOrderModule(BarGraphModule):
             static_val_length = 0
 
         try:
-            agents = sorted(
-                data_collector.agent_vars["Agents"][-1],
-                key=lambda x: x[0]
-            )  # [:-1]
-
+            agents = sorted(agent_data.iloc[-1].items(),key=lambda x: x[0])
             for item in agents:
                 if not self.sent_data:
                     vals[3].append(item[1].name)
@@ -200,11 +210,12 @@ class PastOrdersModule(BarGraphModule):
         self.sent_data = False
 
     def render(self, model: HavvenModel) -> OrderbookValueTuple:
-        data_collector: "DataCollector" = getattr(
-            model, self.data_collector_name
-        )
+        data_collector: "DataCollector" = getattr(model, self.data_collector_name)
+    
+        # Get the agent data as a DataFrame
+        agent_data = data_collector.get_agent_vars_dataframe()
 
-        if len(data_collector.agent_vars["Agents"]) <= 1:
+        if len(agent_data) <= 1:
             self.sent_data = False
 
         # vals are [datasets],[colours],[bar #],[playername],[dataset 1],...[dataset n]
@@ -219,11 +230,7 @@ class PastOrdersModule(BarGraphModule):
             vals = ([], [], [], [], [], [])
             static_val_length = 0
         try:
-            agents = sorted(
-                data_collector.agent_vars["Agents"][-1],
-                key=lambda x: x[0]
-            )  # [:-1]
-
+            agents = sorted(agent_data.iloc[-1].items(),key=lambda x: x[0])
             for item in agents:
                 if not self.sent_data:
                     vals[3].append(item[1].name)

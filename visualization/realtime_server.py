@@ -310,13 +310,30 @@ class ModelHandler:
         with self.data_lock:
             self.data = []
 
+    # def render_model(self):
+    #     """collect the data from the model and put it in the queue to be sent for rendering"""
+    #     visualization_state = []
+    #     for element in self.visualization_elements:
+    #         element_state = element.render(self.model)
+    #         visualization_state.append(element_state)
+    #     self.data.append((self.current_step, visualization_state))
+    
     def render_model(self):
-        """collect the data from the model and put it in the queue to be sent for rendering"""
-        visualization_state = []
-        for element in self.visualization_elements:
-            element_state = element.render(self.model)
-            visualization_state.append(element_state)
-        self.data.append((self.current_step, visualization_state))
+            """Collect the data from the model and put it in the queue to be sent for rendering"""
+            # print("In render model function")
+            visualization_state = []
+
+            for element in self.visualization_elements:
+                try:
+                    # print("Element", element)
+                    element_state = element.render(self.model)
+                    visualization_state.append(element_state)
+                except Exception as e:
+                    # Handle the exception as needed, e.g., print an error message.
+                    print(f"Error rendering element {element}: {e}")
+                    # You can choose to log the error, ignore it, or take other actions.
+
+            self.data.append((self.current_step, visualization_state))
 
     def step(self):
         self.model.step()
@@ -422,7 +439,8 @@ class ModularServer(tornado.web.Application):
 
     def launch(self, port=None):
         """ Run the app. """
-        startLoop = not tornado.ioloop.IOLoop.initialized()
+        # startLoop = not tornado.ioloop.IOLoop.initialized()
+        startLoop = (tornado.ioloop.IOLoop.current(instance=False) is None)
         if port is not None:
             self.port = port
         url = 'http://127.0.0.1:{PORT}'.format(PORT=self.port)

@@ -186,7 +186,8 @@ class CachedModularServer(tornado.web.Application):
 
     def launch(self, port=None):
         """ Run the app. """
-        startLoop = not tornado.ioloop.IOLoop.initialized()
+        # startLoop = not tornado.ioloop.IOLoop.initialized()
+        startLoop = (tornado.ioloop.IOLoop.current(instance=False) is None)
         if port is not None:
             self.port = port
         url = 'http://127.0.0.1:{PORT}'.format(PORT=self.port)
